@@ -1,3 +1,458 @@
-<!doctype html>
-<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>泰好玩！曼谷 × 清邁旅遊挑戰</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet"><script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.11/p5.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.5.3/papaparse.min.js"></script><link rel="stylesheet" href="style.css"></head>
-<body><div id="canvas-layer" aria-hidden="true"></div><main class="shell"><header><div class="eyebrow">✈ THAILAND TRAVEL QUIZ ✈</div><h1>泰好玩！<span>曼谷 × 清邁</span></h1><p class="subtitle">5 題小挑戰，看看你有多懂泰國！</p></header><section class="card" id="quiz-card" aria-live="polite"><div class="topline"><span id="round">旅遊小測驗</span><span id="progress">第 1 / 5 題</span></div><div class="progress-track"><div id="progress-bar"></div></div><div id="question" class="question">題目載入中…</div><div id="options" class="options"></div><p id="feedback" class="feedback" role="status"></p><button id="next" class="main-button hidden">下一題 →</button><div id="result" class="result hidden"><div id="result-emoji" class="result-emoji"></div><h2 id="result-title"></h2><p id="result-count"></p><p id="result-score"></p><p id="result-message"></p><button id="retry" class="main-button">🔄 再答一次（隨機新題目）</button></div><div id="error" class="error hidden"></div></section><footer>🌴 Bangkok & Chiang Mai · 每回合隨機抽選 5 題</footer></main><script src="sketch.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <!-- ==========================================
+         1. 網站基本設定
+    ========================================== -->
+
+    <!-- 設定網頁使用 UTF-8 編碼，確保繁體中文正常顯示 -->
+    <meta charset="UTF-8">
+
+    <!-- 響應式網頁設定，支援電腦、平板及手機 -->
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+    <!-- 瀏覽器分頁標題 -->
+    <title>泰好玩！曼谷 × 清邁旅遊挑戰</title>
+
+
+    <!-- ==========================================
+         2. Google Fonts 字型設定
+    ========================================== -->
+
+    <!-- 預先連線 Google Fonts，加快字型載入速度 -->
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <!--
+        使用 Google Fonts：Noto Sans TC
+
+        字重說明：
+        400：一般文字
+        500：中等粗細
+        600：半粗體
+        700：粗體
+        800：特粗體
+        900：最粗體
+
+        題目建議使用 700 或 800
+        選項建議使用 500
+    -->
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <!-- ==========================================
+         3. 載入 p5.js 動畫函式庫
+    ========================================== -->
+
+    <!--
+        p5.js 用途：
+        1. 愛心煙火動畫
+        2. 答題互動特效
+        3. 成績結算動畫
+        4. 隨視窗大小調整動畫畫布
+    -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.11/p5.min.js"></script>
+
+
+    <!-- ==========================================
+         4. 載入 PapaParse CSV 解析函式庫
+    ========================================== -->
+
+    <!--
+        PapaParse 用途：
+        1. 讀取 Google Sheets 發布的 CSV 題庫
+        2. 將 CSV 資料轉換為 JavaScript 物件
+        3. 正確處理題目中的逗號及特殊字元
+
+        注意：
+        Google Sheets 題庫網址設定於 sketch.js
+    -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.5.3/papaparse.min.js"></script>
+
+
+    <!-- ==========================================
+         5. 載入網站 CSS 樣式
+    ========================================== -->
+
+    <!--
+        style.css 負責：
+        1. 網站背景與配色
+        2. 題目及選項版面
+        3. 答對、答錯動畫
+        4. 手機、平板及電腦響應式排版
+    -->
+
+    <link rel="stylesheet" href="style.css">
+
+
+    <!-- ==========================================
+         6. 網站預設字型
+    ========================================== -->
+
+    <style>
+
+        /* 全站預設使用 Google Fonts */
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+
+        /* 題目文字設定為粗體 */
+        #question {
+            font-family: 'Noto Sans TC', sans-serif;
+            font-weight: 800;
+        }
+
+        /* 選項文字使用中等字重 */
+        .options {
+            font-family: 'Noto Sans TC', sans-serif;
+            font-weight: 500;
+        }
+
+        /* 網站主標題 */
+        h1 {
+            font-family: 'Noto Sans TC', sans-serif;
+            font-weight: 900;
+        }
+
+        /* 成績標題 */
+        #result-title {
+            font-family: 'Noto Sans TC', sans-serif;
+            font-weight: 800;
+        }
+
+        /* 按鈕文字 */
+        button {
+            font-family: 'Noto Sans TC', sans-serif;
+            font-weight: 700;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+    <!-- ==========================================
+         7. p5.js 動畫畫布容器
+    ========================================== -->
+
+    <!--
+        此區域用來放置 p5.js 畫布。
+
+        主要顯示：
+        1. 愛心煙火
+        2. 結算特效
+
+        aria-hidden：
+        避免動畫內容干擾螢幕閱讀器。
+    -->
+
+    <div id="canvas-layer" aria-hidden="true"></div>
+
+
+    <!-- ==========================================
+         8. 網站主要內容
+    ========================================== -->
+
+    <main class="shell">
+
+
+        <!-- ======================================
+             8-1. 網站標題區
+        ====================================== -->
+
+        <header>
+
+            <!-- 英文裝飾標題 -->
+            <div class="eyebrow">
+                ✈ THAILAND TRAVEL QUIZ ✈
+            </div>
+
+            <!-- 網站主標題 -->
+            <h1>
+                泰好玩！
+                <span>曼谷 × 清邁</span>
+            </h1>
+
+            <!-- 網站副標題 -->
+            <p class="subtitle">
+                5 題小挑戰，看看你有多懂泰國！
+            </p>
+
+        </header>
+
+
+        <!-- ======================================
+             8-2. 測驗卡片
+        ====================================== -->
+
+        <!--
+            quiz-card：
+            整個測驗區域。
+
+            aria-live：
+            當題目或成績更新時，
+            讓輔助閱讀工具可以感知內容變化。
+        -->
+
+        <section
+            class="card"
+            id="quiz-card"
+            aria-live="polite"
+        >
+
+
+            <!-- ==================================
+                 8-3. 題目進度資訊
+            ================================== -->
+
+            <div class="topline">
+
+                <!-- 測驗名稱 -->
+                <span id="round">
+                    旅遊小測驗
+                </span>
+
+                <!-- 顯示目前題數 -->
+                <span id="progress">
+                    第 1 / 5 題
+                </span>
+
+            </div>
+
+
+            <!-- ==================================
+                 8-4. 答題進度條
+            ================================== -->
+
+            <div class="progress-track">
+
+                <!--
+                    progress-bar：
+                    由 sketch.js 控制寬度。
+
+                    例如：
+                    第1題：20%
+                    第2題：40%
+                    第3題：60%
+                    第4題：80%
+                    第5題：100%
+                -->
+
+                <div id="progress-bar"></div>
+
+            </div>
+
+
+            <!-- ==================================
+                 8-5. 題目顯示區
+            ================================== -->
+
+            <!--
+                question：
+                顯示 Google Sheets 題庫中的題目。
+
+                背景顏色：
+                #e9edc9
+
+                字型：
+                Noto Sans TC
+
+                字重：
+                800（粗體）
+            -->
+
+            <div id="question" class="question">
+                題目載入中…
+            </div>
+
+
+            <!-- ==================================
+                 8-6. A～D 選項區
+            ================================== -->
+
+            <!--
+                options：
+                由 sketch.js 動態產生四個選項。
+
+                答對：
+                背景 #cdb4db
+                上下跳動
+
+                答錯：
+                背景 #bde0fe
+                左右晃動
+            -->
+
+            <div id="options" class="options"></div>
+
+
+            <!-- ==================================
+                 8-7. 答題回饋訊息
+            ================================== -->
+
+            <!--
+                feedback：
+                顯示答題結果。
+
+                例如：
+                答對了！
+                答錯了！
+                正確答案：B
+            -->
+
+            <p
+                id="feedback"
+                class="feedback"
+                role="status"
+            ></p>
+
+
+            <!-- ==================================
+                 8-8. 下一題按鈕
+            ================================== -->
+
+            <!--
+                預設隱藏。
+
+                使用者完成當前題目後，
+                由 sketch.js 顯示按鈕。
+            -->
+
+            <button
+                id="next"
+                class="main-button hidden"
+                type="button"
+            >
+                下一題 →
+            </button>
+
+
+            <!-- ==================================
+                 8-9. 測驗結果區
+            ================================== -->
+
+            <!--
+                當五題全部完成後，
+                隱藏題目並顯示此區域。
+            -->
+
+            <div
+                id="result"
+                class="result hidden"
+            >
+
+                <!-- 成績表情符號 -->
+                <div
+                    id="result-emoji"
+                    class="result-emoji"
+                ></div>
+
+
+                <!-- 成績標題 -->
+                <h2 id="result-title"></h2>
+
+
+                <!-- 答對題數 -->
+                <p id="result-count"></p>
+
+
+                <!-- 總成績 -->
+                <p id="result-score"></p>
+
+
+                <!-- 成績鼓勵文字 -->
+                <p id="result-message"></p>
+
+
+                <!-- 重新測驗按鈕 -->
+                <button
+                    id="retry"
+                    class="main-button"
+                    type="button"
+                >
+                    🔄 再答一次（隨機新題目）
+                </button>
+
+            </div>
+
+
+            <!-- ==================================
+                 8-10. 題庫載入錯誤訊息
+            ================================== -->
+
+            <!--
+                當 Google Sheets 無法讀取時，
+                由 sketch.js 顯示錯誤訊息。
+            -->
+
+            <div
+                id="error"
+                class="error hidden"
+                role="alert"
+            ></div>
+
+        </section>
+
+
+        <!-- ======================================
+             8-11. 網站頁尾
+        ====================================== -->
+
+        <footer>
+            🌴 Bangkok & Chiang Mai · 每回合隨機抽選 5 題
+        </footer>
+
+    </main>
+
+
+    <!-- ==========================================
+         9. 載入測驗主程式
+    ========================================== -->
+
+    <!--
+        sketch.js 負責：
+
+        1. 連線 Google Sheets
+        2. 讀取並解析 CSV 題庫
+        3. 隨機抽選五題
+        4. 顯示題目及選項
+        5. 判斷答對或答錯
+        6. 控制選項動畫
+        7. 計算成績
+        8. 播放愛心煙火
+        9. 播放加油動畫
+        10. 再答一次重新讀取題庫
+
+        注意：
+        請在 sketch.js 中移除：
+
+        loadFont('assets/Stick-Regular.ttf');
+
+        並將原本：
+
+        textFont(stickFont);
+
+        改成：
+
+        textFont('Noto Sans TC');
+    -->
+
+    <script src="sketch.js"></script>
+
+</body>
+
+</html>
